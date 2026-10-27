@@ -1,0 +1,319 @@
+{
+  "total": 8,
+  "events": [
+    {
+      "id": 1,
+      "title_en": "Two injured in collision on Kandy Road",
+      "title_si": "කඩවත අසල මහනුවර මාර්ගයේ අනතුරකින් දෙදෙනෙකු තුවාල ලබයි",
+      "title_ta": "கடவத்தை அருகே கண்டி வீதியில் விபத்தில் இருவர் காயம்",
+      "summary": "A van and a three-wheeler collided near Kadawatha on the Kandy Road. Two people were taken to hospital with injuries that are not life-threatening.",
+      "steps": [
+        "The collision occurred near the Kadawatha interchange around 08:10.",
+        "Emergency crews cleared one lane while traffic was diverted.",
+        "Police said both injured people are receiving treatment in hospital."
+      ],
+      "category": "ACCIDENT",
+      "town": "Kadawatha",
+      "district": "Gampaha",
+      "latitude": 7.0016,
+      "longitude": 79.9525,
+      "location_precision": "exact",
+      "confidence": 0.78,
+      "first_reported_at": "2026-10-27T10:45:00Z",
+      "last_updated_at": "2026-10-27T10:45:00Z",
+      "source_count": 2,
+      "sources": ["Ada Derana", "Daily Mirror"],
+      "media_reports": [
+        {
+          "source_name": "Ada Derana",
+          "url": "https://www.adaderana.lk",
+          "language": "EN",
+          "media_type": "RSS",
+          "published_at": "2026-10-27T10:45:00Z"
+        },
+        {
+          "source_name": "Daily Mirror",
+          "url": "https://www.dailymirror.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T10:45:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 2,
+      "title_en": "Heavy rain triggers flooding in Ratnapura town",
+      "title_si": "රත්නපුර නගරයේ ගංවතුර",
+      "title_ta": "இரத்தினபுரியில் வெள்ளம்",
+      "summary": "Overnight heavy rain caused flash flooding in low-lying parts of Ratnapura town. The Disaster Management Centre said no evacuations were required.",
+      "steps": [
+        "Heavy rain began late on Monday evening.",
+        "Water entered shops near the bus stand before dawn.",
+        "Roads reopened after drains were cleared on Tuesday morning."
+      ],
+      "category": "WEATHER",
+      "town": "Ratnapura",
+      "district": "Ratnapura",
+      "latitude": 6.6828,
+      "longitude": 80.4034,
+      "location_precision": "exact",
+      "confidence": 0.84,
+      "first_reported_at": "2026-10-27T09:30:00Z",
+      "last_updated_at": "2026-10-27T09:30:00Z",
+      "source_count": 3,
+      "sources": ["Ada Derana Sinhala", "NewsFirst", "EconomyNext"],
+      "media_reports": [
+        {
+          "source_name": "Ada Derana Sinhala",
+          "url": "https://sinhala.adaderana.lk",
+          "language": "SI",
+          "media_type": "RSS",
+          "published_at": "2026-10-27T09:30:00Z"
+        },
+        {
+          "source_name": "NewsFirst",
+          "url": "https://english.newsfirst.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T09:30:00Z"
+        },
+        {
+          "source_name": "EconomyNext",
+          "url": "https://economynext.com",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T09:30:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 3,
+      "title_en": "Police arrest three over smuggling attempt in Mannar",
+      "title_si": "මන්නාරමේදී තිදෙනෙකු අත්අඩංගුවට",
+      "title_ta": "மன்னாரில் மூவர் கைது",
+      "summary": "Police intercepted a boat carrying unregistered goods near Mannar and arrested three people. The suspects are expected to appear before the magistrate.",
+      "steps": [
+        "A patrol spotted the boat before dawn.",
+        "Officers seized the cargo and detained three suspects.",
+        "The case was handed to the local police station for further investigation."
+      ],
+      "category": "CRIME",
+      "town": "Mannar",
+      "district": "Mannar",
+      "latitude": 8.9810,
+      "longitude": 79.9044,
+      "location_precision": "exact",
+      "confidence": 0.66,
+      "first_reported_at": "2026-10-27T08:00:00Z",
+      "last_updated_at": "2026-10-27T08:00:00Z",
+      "source_count": 1,
+      "sources": ["Daily Mirror"],
+      "media_reports": [
+        {
+          "source_name": "Daily Mirror",
+          "url": "https://www.dailymirror.lk",
+          "language": "EN",
+          "media_type": "RSS",
+          "published_at": "2026-10-27T08:00:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 4,
+      "title_en": "Power outage affects parts of Jaffna",
+      "title_si": "යාපනයේ විදුලිය විසන්ධි වීමක්",
+      "title_ta": "யாழ்ப்பாணத்தில் மின்வெட்டு",
+      "summary": "A transmission fault left several neighbourhoods in Jaffna without electricity for two hours. The Ceylon Electricity Board restored supply by midday.",
+      "steps": [
+        "Supply was interrupted at around 10:05.",
+        "Engineers traced the fault to a substation feeder.",
+        "Power was restored to all affected areas by 12:20."
+      ],
+      "category": "INFRASTRUCTURE",
+      "town": "Jaffna",
+      "district": "Jaffna",
+      "latitude": 9.6615,
+      "longitude": 80.0255,
+      "location_precision": "exact",
+      "confidence": 0.61,
+      "first_reported_at": "2026-10-27T06:30:00Z",
+      "last_updated_at": "2026-10-27T06:30:00Z",
+      "source_count": 1,
+      "sources": ["NewsFirst"],
+      "media_reports": [
+        {
+          "source_name": "NewsFirst",
+          "url": "https://english.newsfirst.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T06:30:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 5,
+      "title_en": "Protest march blocks Galle Road in Colombo",
+      "title_si": "කොළඹ ගාලු පාරේ විරෝධතා පෙළපාලිය",
+      "title_ta": "கொழும்பில் ஆர்ப்பாட்டம்",
+      "summary": "A protest march blocked a section of Galle Road in Colombo for about an hour. Police redirected traffic while organisers handed over a petition.",
+      "steps": [
+        "Marchers gathered near Kollupitiya at 15:00.",
+        "Traffic was diverted along Marine Drive.",
+        "The group dispersed after handing a petition to officials."
+      ],
+      "category": "POLITICS",
+      "town": "Colombo",
+      "district": "Colombo",
+      "latitude": 6.9271,
+      "longitude": 79.8612,
+      "location_precision": "exact",
+      "confidence": 0.72,
+      "first_reported_at": "2026-10-27T04:30:00Z",
+      "last_updated_at": "2026-10-27T04:30:00Z",
+      "source_count": 3,
+      "sources": ["Ada Derana", "Daily Mirror", "The Island"],
+      "media_reports": [
+        {
+          "source_name": "Ada Derana",
+          "url": "https://www.adaderana.lk",
+          "language": "EN",
+          "media_type": "RSS",
+          "published_at": "2026-10-27T04:30:00Z"
+        },
+        {
+          "source_name": "Daily Mirror",
+          "url": "https://www.dailymirror.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T04:30:00Z"
+        },
+        {
+          "source_name": "The Island",
+          "url": "https://island.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T04:30:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 6,
+      "title_en": "Vegetable prices rise in Nuwara Eliya markets",
+      "title_si": "නුවරඑළිය එළවළු මිල ඉහළට",
+      "title_ta": "நுவரெலியாவில் மரக்கறி விலை உயர்வு",
+      "summary": "Vegetable prices in Nuwara Eliya increased after several days of bad weather disrupted supplies. Traders expect prices to ease once transport resumes normally.",
+      "steps": [
+        "Supplies were delayed by poor road conditions.",
+        "Retail prices rose for beans, carrots and leeks.",
+        "Traders expect a return to normal within a week."
+      ],
+      "category": "ECONOMY",
+      "town": "Nuwara Eliya",
+      "district": "Nuwara Eliya",
+      "latitude": 6.9497,
+      "longitude": 80.7891,
+      "location_precision": "exact",
+      "confidence": 0.58,
+      "first_reported_at": "2026-10-27T02:00:00Z",
+      "last_updated_at": "2026-10-27T02:00:00Z",
+      "source_count": 1,
+      "sources": ["EconomyNext"],
+      "media_reports": [
+        {
+          "source_name": "EconomyNext",
+          "url": "https://economynext.com",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-27T02:00:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 7,
+      "title_en": "Landslide closes access road near Badulla",
+      "title_si": "බදුල්ල මාර්ගයක නායයාමක්",
+      "title_ta": "பதுளையில் மண்சரிவு",
+      "summary": "A minor landslide blocked a rural access road near Badulla after sustained rain. No injuries were reported and crews were clearing the debris.",
+      "steps": [
+        "Debris came down onto the road early on Monday.",
+        "The road was closed to traffic as a precaution.",
+        "Council crews began clearing the route."
+      ],
+      "category": "ACCIDENT",
+      "town": "Badulla",
+      "district": "Badulla",
+      "latitude": 6.9934,
+      "longitude": 81.0550,
+      "location_precision": "approximate",
+      "confidence": 0.55,
+      "first_reported_at": "2026-10-26T22:00:00Z",
+      "last_updated_at": "2026-10-26T22:00:00Z",
+      "source_count": 2,
+      "sources": ["Ada Derana Sinhala", "NewsFirst"],
+      "media_reports": [
+        {
+          "source_name": "Ada Derana Sinhala",
+          "url": "https://sinhala.adaderana.lk",
+          "language": "SI",
+          "media_type": "RSS",
+          "published_at": "2026-10-26T22:00:00Z"
+        },
+        {
+          "source_name": "NewsFirst",
+          "url": "https://english.newsfirst.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-26T22:00:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    },
+    {
+      "id": 8,
+      "title_en": "Community clean-up drive held in Trincomalee",
+      "title_si": "ත්‍රිකුණාමලයේ පිරිසිදු කිරීමේ වැඩසටහනක්",
+      "title_ta": "திருகோணமலையில் சிரமதான பணி",
+      "summary": "Volunteers took part in a community clean-up along the Trincomalee waterfront. Organisers said the collected waste would be recycled.",
+      "steps": [
+        "Volunteers met at the waterfront at 07:00.",
+        "Several bags of waste were collected and sorted.",
+        "Organisers plan to repeat the drive next month."
+      ],
+      "category": "OTHER",
+      "town": "Trincomalee",
+      "district": "Trincomalee",
+      "latitude": 8.5874,
+      "longitude": 81.2152,
+      "location_precision": "exact",
+      "confidence": 0.45,
+      "first_reported_at": "2026-10-26T15:00:00Z",
+      "last_updated_at": "2026-10-26T15:00:00Z",
+      "source_count": 1,
+      "sources": ["The Island"],
+      "media_reports": [
+        {
+          "source_name": "The Island",
+          "url": "https://island.lk",
+          "language": "EN",
+          "media_type": "WEB",
+          "published_at": "2026-10-26T15:00:00Z"
+        }
+      ],
+      "is_active": true,
+      "extractor": "demo"
+    }
+  ]
+}

@@ -193,9 +193,9 @@
   function loadDistrictBorders() {
     if (!state.map || state.map.getSource('districts')) return;
 
-    fetch('/static/sri-lanka-districts.geojson')
+    fetch('./sri-lanka-districts.geojson')
       .then((response) => {
-        if (!response.ok) throw new Error('boundaries unavailable');
+        if (!response.ok) return fetch('/static/sri-lanka-districts.geojson').then((r) => r.json());
         return response.json();
       })
       .then((geojson) => {
@@ -230,7 +230,17 @@
       setEvents(data.events || []);
       state.lastFetch = Date.now();
     } catch (error) {
-      console.warn('Failed to fetch events:', error);
+      console.warn('API unavailable, attempting demo-events.json fallback:', error);
+      try {
+        const demoResp = await fetch('./demo-events.json');
+        if (demoResp.ok) {
+          const demoData = await demoResp.json();
+          setEvents(demoData.events || []);
+          setConnection(false, 'DEMO PREVIEW');
+        }
+      } catch (err) {
+        console.warn('Demo fallback failed:', err);
+      }
     }
   }
 
@@ -276,6 +286,10 @@
 
   // ─── WebSocket ────────────────────────────────────────────
   function connectWebSocket() {
+    if (location.hostname.endsWith('github.io')) {
+      setConnection(false, 'DEMO PREVIEW');
+      return;
+    }
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     let socket;
     try {
@@ -335,12 +349,12 @@
     }
   }
 
-  function setConnection(connected) {
+  function setConnection(connected, customLabel) {
     const indicator = $('#conn-indicator');
     const label = $('#conn-state');
     const dot = $('#live-dot');
     indicator.classList.toggle('offline', !connected);
-    label.textContent = connected ? 'LIVE' : 'OFFLINE';
+    label.textContent = customLabel || (connected ? 'LIVE' : 'OFFLINE');
     dot.classList.toggle('offline', !connected);
   }
 
