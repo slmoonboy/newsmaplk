@@ -128,13 +128,13 @@ link, timestamp and a short extracted snippet, and always links to the original 
 
 ## 4. Rate limits and politeness
 
-| Service | Limit applied by LankaPulse | Backoff |
+| Service | Limit applied by LankaPulse | On failure |
 | --- | --- | --- |
-| Publisher RSS | One fetch per feed per cycle (default 180 s) | Per-feed failure counter |
-| Google News RSS | At most one query per locale per cycle | Treated as best-effort |
-| Nominatim | ≥ 1.1 s between calls, disk cache | Skips on error |
-| Wikipedia | One search + extract per event, cached | Skips on error |
-| Article pages | One fetch per URL, 12 s timeout, `MAX_ITEMS_PER_CYCLE` cap | Skips on error |
+| Publisher RSS | One fetch per feed per cycle (default 180 s) | Logged and retried next cycle |
+| Google News RSS | At most one query per locale per cycle | Logged and retried next cycle |
+| Nominatim | ≥ 1.1 s between calls, disk cache | Skips geocoding, uses gazetteer |
+| Wikipedia | One search + extract per event, cached | Event stored without context |
+| Article pages | One fetch per URL, 10 s timeout, `MAX_ITEMS_PER_CYCLE` cap | Headline/summary only |
 | GDELT (if enabled) | One query per event | 429 → skip |
 
 The pipeline also pauses `ITEM_PAUSE_SECONDS` (default 1.5 s) between items so a cycle

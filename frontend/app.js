@@ -9,6 +9,7 @@
   // ─── Constants ────────────────────────────────────────────
   const SL_CENTER = [80.7718, 7.8731];
   const SL_ZOOM = 7.0;
+  const SL_ZOOM_NARROW = 6.6;
   // Generous bounds: keep the user near Sri Lanka without forcing a zoom level
   // (a tight maxBounds makes MapLibre zoom in differently per window size).
   const SL_BOUNDS = [[73.5, 2.5], [88.0, 13.5]];
@@ -101,7 +102,7 @@
       container: 'map',
       style: OPENFREEMAP_STYLE,
       center: SL_CENTER,
-      zoom: SL_ZOOM,
+      zoom: window.innerWidth <= 560 ? SL_ZOOM_NARROW : SL_ZOOM,
       maxBounds: SL_BOUNDS,
       minZoom: 6.4,
       maxZoom: 14,

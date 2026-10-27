@@ -224,8 +224,8 @@ data/               SQLite database (git-ignored, created at runtime)
   original source linked in the drawer and official announcements.
 * **LLMs can hallucinate.** Rule-based extraction is deliberately conservative, and low
   confidence events are dropped rather than guessed.
-* **Free endpoints are best-effort.** Google News and Nominatim may throttle; the pipeline
-  backs off, and the app keeps serving the last known events.
+* **Free endpoints are best-effort.** Google News and Nominatim may throttle; failed fetches are
+  skipped and retried on the next cycle, while the app keeps serving the last known events.
 * **Localisation is approximate.** A district-centroid fallback is labelled as such.
 
 ---
