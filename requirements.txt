@@ -1,0 +1,30 @@
+# LankaPulse — Python Backend Dependencies
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+websockets==14.1
+
+# Async HTTP & Feeds
+httpx==0.28.1
+feedparser==6.0.11
+
+# Playwright (Headless Chromium for Google Grounding)
+playwright==1.49.1
+
+# LLM Integration (OpenAI-compatible)
+openai==1.58.1
+
+# Data Validation & ORM
+pydantic==2.10.4
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+
+# Social Media Scraping
+twikit==2.3.1
+yt-dlp==2024.12.13
+
+# Utilities
+python-dotenv==1.0.1
+beautifulsoup4==4.12.3
+lxml==5.3.0
+apscheduler==3.11.0

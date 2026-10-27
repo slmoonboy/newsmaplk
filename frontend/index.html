@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LankaPulse — Real-Time Breaking News Map of Sri Lanka</title>
+  <meta name="description" content="Live, location-aware breaking news map of Sri Lanka. AI-verified events from Ada Derana, Hiru, NewsFirst, Daily Mirror and more.">
+  <meta name="theme-color" content="#09090B">
+
+  <!-- MapLibre GL JS -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- LankaPulse Styles -->
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+  <!-- ═══ Top Header Bar ═══ -->
+  <header class="header" id="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">LP</div>
+        <div class="logo-text">Lanka<span>Pulse</span></div>
+      </div>
+      <div class="header-separator"></div>
+      <div class="header-subtitle">Real-Time News Intelligence</div>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span>LIVE</span>
+      </div>
+      <div class="stat-chip">
+        <span>Events 24h</span>
+        <span class="count" id="stat-events-24h">0</span>
+      </div>
+      <div class="stat-chip">
+        <span>Districts</span>
+        <span class="count" id="stat-districts">0</span>
+      </div>
+      <div class="stat-chip">
+        <span class="count" id="stat-time"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Map Container ═══ -->
+  <div id="map"></div>
+
+  <!-- ═══ Map Tooltip (hover) ═══ -->
+  <div class="map-tooltip" id="map-tooltip">
+    <div class="tooltip-location" id="tooltip-location"></div>
+    <div class="tooltip-title" id="tooltip-title"></div>
+    <div class="tooltip-meta" id="tooltip-meta"></div>
+  </div>
+
+  <!-- ═══ Empty State ═══ -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-state-icon">◎</div>
+    <span>Monitoring Sri Lankan news channels… Events will appear as map pins.</span>
+  </div>
+
+  <!-- ═══ Drawer Overlay ═══ -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <!-- ═══ Split-View Event Drawer ═══ -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-handle">
+      <div class="drawer-handle-bar"></div>
+    </div>
+
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <div class="drawer-location">
+          <span class="drawer-location-badge" id="drawer-location"></span>
+          <span class="drawer-coords" id="drawer-coords"></span>
+        </div>
+        <h1 class="drawer-title" id="drawer-title"></h1>
+        <div class="drawer-title-si" id="drawer-title-si"></div>
+      </div>
+      <button class="drawer-close" id="drawer-close" aria-label="Close drawer">✕</button>
+    </div>
+
+    <!-- Drawer Body: 50/50 Split -->
+    <div class="drawer-content">
+
+      <!-- LEFT: AI Synthesis -->
+      <div class="drawer-left" id="drawer-left">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span class="category-badge" id="drawer-category" data-cat=""></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);" id="drawer-time-ago"></span>
+        </div>
+
+        <div class="section-label">What Happened</div>
+        <div class="what-happened" id="drawer-what"></div>
+
+        <div class="section-label">How It Happened</div>
+        <ul class="timeline-list" id="drawer-timeline"></ul>
+
+        <div class="section-label">Verification</div>
+        <div class="verify-meter" id="drawer-verify">
+          <div class="verify-header">
+            <span class="verify-label">Truth & Consensus</span>
+            <span class="verify-badge" id="verify-badge"></span>
+          </div>
+          <div class="verify-bar">
+            <div class="verify-bar-fill" id="verify-bar-fill" style="width:0%"></div>
+          </div>
+          <div class="verify-sources" id="verify-sources"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Media Feed -->
+      <div class="drawer-right">
+        <div class="feed-tabs" id="feed-tabs">
+          <button class="feed-tab active" data-filter="all">All</button>
+          <button class="feed-tab" data-filter="WEB">TV & Web</button>
+          <button class="feed-tab" data-filter="X_POST">𝕏 Posts</button>
+          <button class="feed-tab" data-filter="YOUTUBE">YouTube</button>
+        </div>
+        <div class="feed-scroll" id="feed-scroll"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ Application Script ═══ -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
