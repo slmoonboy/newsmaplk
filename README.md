@@ -191,6 +191,36 @@ ENABLE_PIPELINE=false docker compose up --build
 
 ---
 
+## Design system & agent tooling (optional)
+
+The UI ships as plain HTML/CSS/JS, but the repository also keeps the design tooling used to
+build it:
+
+* **Skill Issue MCP** — the project-level `opencode.json` connects
+  `https://skill-issue.in/api/mcp`, a read-only catalogue of agent skills. No key required.
+* **Local agent skills** — 20 design, motion and quality skills are installed under
+  `.agents/skills/` (git-ignored) and recorded in `skills-lock.json`:
+  ```bash
+  npx skills experimental_install   # restore the recorded set
+  ```
+* **Rare UI registry index** — `scripts/rare_registry.py` indexes Rare UI component metadata
+  into a local SQLite database so components can be searched offline:
+  ```bash
+  python scripts/rare_registry.py sync
+  python scripts/rare_registry.py search counter
+  python scripts/rare_registry.py show animated-counter
+  ```
+
+Five interaction patterns from [Rare UI](https://rareui.com) were re-implemented in vanilla
+JS/CSS: animated stat counters, the notification bell, the gliding category chip, feed scroll
+progress, and the timeline step player. No Rare UI component source is vendored; the registry
+database stores metadata only. A visible **“UI patterns by Rare UI”** credit is kept in the
+feed panel footer and the map attribution.
+
+Read [`docs/RARE_UI.md`](docs/RARE_UI.md) for the component map, licence terms and commands.
+
+---
+
 ## Refresh the district boundaries
 
 The 25 district outlines are committed, so this is only needed when you want to update
@@ -209,9 +239,11 @@ python scripts/fetch_boundaries.py --check  # validate without writing
 backend/            FastAPI app, ingestion, geocoding, extraction, tests
   tests/            25 offline tests (unit + API + WebSocket)
 frontend/           MapLibre UI (no build step) + committed district GeoJSON
-scripts/            Boundary refresh helper
-docs/               Open-source stack, licences and limitations
-data/               SQLite database (git-ignored, created at runtime)
+scripts/            Boundary refresh + Rare UI registry indexer
+docs/               Open-source stack, licences, Rare UI/MCP notes
+data/               SQLite databases (git-ignored, created at runtime)
+opencode.json       Project-scoped Skill Issue MCP connection
+skills-lock.json    Reproducible manifest of installed agent skills
 ```
 
 ---
@@ -241,6 +273,9 @@ Data and third-party components keep their own licences:
 * Tiles by [OpenFreeMap](https://openfreemap.org/) (free, no key)
 * [MapLibre GL JS](https://maplibre.org/) — **BSD-3-Clause**
 * Wikipedia text — **CC BY-SA 4.0**
+* Interaction patterns adapted from [Rare UI](https://rareui.com) — **MIT + Commons Clause
+  1.0 + Attribution**; the component source is not redistributed. See
+  [`docs/RARE_UI.md`](docs/RARE_UI.md).
 * News headlines remain © their publishers; links and attribution are always shown.
 
 Attribution is rendered on the map and must stay visible when redistributing.

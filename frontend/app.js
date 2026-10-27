@@ -63,9 +63,19 @@
     lastFetch: 0,
     booted: false,
     styleLoaded: false,
+    knownIds: new Set(),
+    hydrated: false,
+    notifications: [],
+    unreadCount: 0,
+    stepTimer: null,
+    stepIndex: 0,
+    stepCount: 0,
+    stepPlaying: false,
+    stepSignature: '',
   };
 
   const $ = (selector) => document.querySelector(selector);
+  const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Exposed for debugging / embedding; harmless in production.
   window.__lankapulse = state;
@@ -73,6 +83,17 @@
   const drawer = $('#drawer');
   const overlay = $('#drawer-overlay');
   const tooltip = $('#map-tooltip');
+  const notifBell = $('#notif-bell');
+  const notifPopover = $('#notif-popover');
+  const notifBadge = $('#notif-badge');
+  const notifList = $('#notif-list');
+  const categoryChips = $('#category-chips');
+  const chipGlide = $('#chip-glide');
+  const feedList = $('#feed-list');
+  const feedProgressBar = $('#feed-progress-bar');
+  const stepPlay = $('#step-play');
+  const stepCount = $('#step-count');
+  const stepProgress = $('#step-progress');
   const emptyState = $('#empty-state');
   const panel = $('#feed-panel');
   const panelOpenButton = $('#panel-open');
@@ -81,6 +102,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
     restorePanelState();
+    renderNotifications();
     initMap();
     // The feed and WebSocket must not depend on WebGL/tile loading.
     bootOnce();
@@ -94,6 +116,15 @@
       if (!state.ws || state.ws.readyState !== WebSocket.OPEN) fetchEvents();
     }, 60000);
     updateClock();
+
+    // Layout-dependent decorations: wait for fonts before measuring chips.
+    window.requestAnimationFrame(() => {
+      syncChipGlide();
+      updateFeedProgress();
+    });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(syncChipGlide).catch(() => {});
+    }
   });
 
   // ─── Map ──────────────────────────────────────────────────
@@ -112,7 +143,9 @@
     state.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     state.map.addControl(new maplibregl.AttributionControl({
       compact: true,
-      customAttribution: 'Boundaries © geoBoundaries (ODbL) · Feeds: public RSS',
+      customAttribution:
+        'Boundaries © geoBoundaries (ODbL) · Feeds: public RSS · ' +
+        'UI patterns: <a href="https://rareui.com" target="_blank" rel="noopener">Rare UI</a>',
     }), 'bottom-right');
 
     state.map.on('style.load', onStyleLoad);
@@ -213,7 +246,19 @@
   }
 
   function setEvents(events) {
-    state.events = new Map((events || []).map((event) => [event.id, event]));
+    const list = events || [];
+    const firstLoad = !state.hydrated;
+    state.events = new Map(list.map((event) => [event.id, event]));
+
+    if (firstLoad) {
+      list.forEach((event) => state.knownIds.add(event.id));
+      state.hydrated = true;
+    } else {
+      list.forEach((event) => {
+        if (!state.knownIds.has(event.id)) noteNewEvent(event);
+      });
+    }
+
     renderAllMarkers();
     renderFeed();
     updateStats();
@@ -221,6 +266,7 @@
 
   function upsertEvent(event) {
     if (!event || typeof event.id !== 'number') return;
+    if (!state.knownIds.has(event.id)) noteNewEvent(event);
     state.events.set(event.id, event);
     renderMarker(event);
     renderFeed();
@@ -405,12 +451,14 @@
         ? 'No events match this filter.'
         : 'No events yet. New pins appear automatically.';
       list.append(message);
+      window.requestAnimationFrame(updateFeedProgress);
       return;
     }
 
     const fragment = document.createDocumentFragment();
     events.forEach((event) => fragment.append(eventCard(event)));
     list.append(fragment);
+    window.requestAnimationFrame(updateFeedProgress);
   }
 
   function eventCard(event) {
@@ -501,6 +549,7 @@
 
   function closeDrawer() {
     if (!drawer.classList.contains('open')) return;
+    pauseStepPlayer();
     drawer.classList.remove('open');
     overlay.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
@@ -546,27 +595,7 @@
     renderProvenance(event);
     $('#drawer-what').textContent = event.what_happened || 'No summary available.';
 
-    const timeline = $('#drawer-timeline');
-    timeline.replaceChildren();
-    const steps = Array.isArray(event.how_it_happened) ? event.how_it_happened : [];
-    if (!steps.length) {
-      const item = document.createElement('li');
-      item.className = 'timeline-item muted';
-      item.textContent = 'No timeline available.';
-      timeline.append(item);
-    } else {
-      steps.forEach((step) => {
-        const item = document.createElement('li');
-        item.className = 'timeline-item';
-        const dot = document.createElement('div');
-        dot.className = 'timeline-dot';
-        const text = document.createElement('div');
-        text.textContent = String(step);
-        item.append(dot, text);
-        timeline.append(item);
-      });
-    }
-
+    renderTimeline(event);
     renderVerification(event);
   }
 
@@ -744,12 +773,14 @@
     });
     const fallbackDistricts = new Set(recent.map((event) => event.district).filter(Boolean));
 
-    $('#stat-events-24h').textContent = state.stats
-      ? state.stats.events_24h
-      : recent.length;
-    $('#stat-districts').textContent = state.stats
-      ? state.stats.districts_active
-      : fallbackDistricts.size;
+    setCounter(
+      $('#stat-events-24h'),
+      state.stats ? state.stats.events_24h : recent.length
+    );
+    setCounter(
+      $('#stat-districts'),
+      state.stats ? state.stats.districts_active : fallbackDistricts.size
+    );
   }
 
   function updateClock() {
@@ -768,6 +799,317 @@
     });
   }
 
+  // ─── Timeline player ──────────────────────────────────────
+  function renderTimeline(event) {
+    const timeline = $('#drawer-timeline');
+    timeline.replaceChildren();
+
+    const steps = Array.isArray(event.how_it_happened) ? event.how_it_happened : [];
+    if (!steps.length) {
+      const item = document.createElement('li');
+      item.className = 'timeline-item muted';
+      item.textContent = 'No timeline available.';
+      timeline.append(item);
+    } else {
+      steps.forEach((step, index) => {
+        const item = document.createElement('li');
+        item.className = 'timeline-item';
+        item.dataset.stepIndex = String(index);
+        item.style.setProperty('--step-i', String(index));
+        const dot = document.createElement('div');
+        dot.className = 'timeline-dot';
+        const text = document.createElement('div');
+        text.className = 'timeline-text';
+        text.textContent = String(step);
+        item.append(dot, text);
+        timeline.append(item);
+      });
+    }
+
+    const signature = `${event.id}::${steps.join('\u0001')}`;
+    if (signature !== state.stepSignature) {
+      state.stepSignature = signature;
+      resetStepPlayer(steps.length);
+    } else {
+      state.stepCount = steps.length;
+      applyStepState();
+    }
+  }
+
+  function resetStepPlayer(count) {
+    clearStepTimer();
+    state.stepPlaying = false;
+    state.stepIndex = 0;
+    state.stepCount = count;
+    stepPlay.hidden = count < 2;
+    applyStepState();
+  }
+
+  function clearStepTimer() {
+    if (state.stepTimer) {
+      clearInterval(state.stepTimer);
+      state.stepTimer = null;
+    }
+  }
+
+  function pauseStepPlayer() {
+    clearStepTimer();
+    state.stepPlaying = false;
+    syncStepButton();
+  }
+
+  function toggleStepPlayer() {
+    if (!state.stepCount) return;
+    if (state.stepPlaying) {
+      pauseStepPlayer();
+      return;
+    }
+    if (state.stepIndex >= state.stepCount) {
+      state.stepIndex = 0;
+    }
+    state.stepPlaying = true;
+    clearStepTimer();
+    advanceStep();
+    state.stepTimer = setInterval(advanceStep, 1500);
+  }
+
+  function advanceStep() {
+    state.stepIndex = Math.min(state.stepIndex + 1, state.stepCount);
+    if (state.stepIndex >= state.stepCount) {
+      clearStepTimer();
+      state.stepPlaying = false;
+    }
+    applyStepState();
+  }
+
+  function applyStepState() {
+    const items = Array.from(
+      document.querySelectorAll('#drawer-timeline .timeline-item[data-step-index]')
+    );
+    const total = items.length;
+    const activeMode = state.stepPlaying || state.stepIndex > 0;
+
+    items.forEach((item, index) => {
+      const pending = activeMode && index >= state.stepIndex;
+      item.classList.toggle('is-pending', pending);
+      item.classList.toggle('is-done', activeMode && index < state.stepIndex - 1);
+      item.classList.toggle('is-active', state.stepPlaying && index === state.stepIndex - 1);
+    });
+
+    if (stepProgress) {
+      stepProgress.style.transform = `scaleX(${total ? state.stepIndex / total : 0})`;
+    }
+    if (stepCount) {
+      if (!total) {
+        stepCount.textContent = '';
+      } else if (activeMode) {
+        stepCount.textContent = `${state.stepIndex} / ${total}`;
+      } else {
+        stepCount.textContent = `${total} step${total === 1 ? '' : 's'}`;
+      }
+    }
+    syncStepButton();
+  }
+
+  function syncStepButton() {
+    if (!stepPlay) return;
+    if (state.stepPlaying) {
+      stepPlay.textContent = '❚❚';
+      stepPlay.setAttribute('aria-label', 'Pause timeline');
+      stepPlay.title = 'Pause timeline';
+    } else if (state.stepIndex >= state.stepCount && state.stepCount > 0) {
+      stepPlay.textContent = '↻';
+      stepPlay.setAttribute('aria-label', 'Replay timeline');
+      stepPlay.title = 'Replay timeline';
+    } else {
+      stepPlay.textContent = '▶';
+      const resume = state.stepIndex > 0;
+      stepPlay.setAttribute(
+        'aria-label',
+        resume ? 'Resume timeline' : 'Play timeline'
+      );
+      stepPlay.title = resume ? 'Resume timeline' : 'Play timeline';
+    }
+  }
+
+  // ─── Animated counter (Rare UI "Animated Counter" pattern) ──
+  function setCounter(element, value) {
+    if (!element) return;
+    const target = Math.max(0, Math.trunc(Number(value) || 0));
+    if (element.dataset.value === String(target)) return;
+    element.dataset.value = String(target);
+    element.setAttribute('aria-label', String(target));
+
+    if (REDUCED_MOTION.matches) {
+      element.textContent = String(target);
+      delete element.dataset.digits;
+      return;
+    }
+
+    const text = String(target);
+    if (element.dataset.digits !== String(text.length)) {
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < text.length; index += 1) {
+        const digit = document.createElement('span');
+        digit.className = 'counter-digit';
+        digit.setAttribute('aria-hidden', 'true');
+        const wheel = document.createElement('span');
+        wheel.className = 'counter-wheel';
+        for (let face = 0; face <= 9; face += 1) {
+          const span = document.createElement('span');
+          span.textContent = String(face);
+          wheel.append(span);
+        }
+        digit.append(wheel);
+        fragment.append(digit);
+      }
+      element.classList.add('counter-instant');
+      element.replaceChildren(fragment);
+      element.dataset.digits = String(text.length);
+      // Let the new wheels paint in their resting position before enabling
+      // transitions, otherwise the first render rolls up from zero.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => element.classList.remove('counter-instant'));
+      });
+    }
+
+    const wheels = element.querySelectorAll('.counter-wheel');
+    wheels.forEach((wheel, index) => {
+      const digit = Number(text[index] || 0);
+      wheel.style.transform = `translateY(${-digit}em)`;
+    });
+  }
+
+  // ─── Notification bell (Rare UI "Notification Bell" pattern) ─
+  function noteNewEvent(event) {
+    if (state.knownIds.has(event.id)) return;
+    state.knownIds.add(event.id);
+    if (!state.hydrated) return;
+
+    state.notifications.unshift({
+      id: event.id,
+      title: event.title_en || 'New event',
+      location: `${event.town || 'Unknown'}, ${event.district || 'Sri Lanka'}`,
+      category: event.category || 'OTHER',
+      at: event.first_reported_at || new Date().toISOString(),
+    });
+    state.notifications = state.notifications.slice(0, 20);
+    state.unreadCount = Math.min(99, state.unreadCount + 1);
+    renderNotifications();
+    ringBell();
+  }
+
+  function renderNotifications() {
+    if (!notifList) return;
+    notifList.replaceChildren();
+
+    if (!state.notifications.length) {
+      const empty = document.createElement('div');
+      empty.className = 'notif-empty';
+      empty.textContent = 'You are all caught up.';
+      notifList.append(empty);
+    } else {
+      state.notifications.forEach((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'notif-item';
+        button.dataset.eventId = String(item.id);
+        button.style.setProperty(
+          '--cat',
+          CATEGORY_COLORS[item.category] || CATEGORY_COLORS.OTHER
+        );
+
+        const dot = document.createElement('span');
+        dot.className = 'notif-dot';
+        const body = document.createElement('span');
+        body.className = 'notif-body';
+
+        const title = document.createElement('span');
+        title.className = 'notif-item-title';
+        title.textContent = item.title;
+
+        const meta = document.createElement('span');
+        meta.className = 'notif-item-meta';
+        meta.textContent = item.location;
+
+        const time = document.createElement('span');
+        time.className = 'notif-item-time';
+        time.dataset.ts = item.at;
+        time.textContent = timeAgo(item.at);
+
+        body.append(title, meta);
+        button.append(dot, body, time);
+        notifList.append(button);
+      });
+    }
+
+    const unread = state.unreadCount;
+    notifBadge.hidden = unread === 0;
+    notifBadge.textContent = unread > 9 ? '9+' : String(unread);
+    notifBell.classList.toggle('has-unread', unread > 0);
+    notifBell.setAttribute(
+      'aria-label',
+      unread ? `${unread} new event${unread === 1 ? '' : 's'}` : 'New events'
+    );
+  }
+
+  function ringBell() {
+    if (!notifBell || REDUCED_MOTION.matches) return;
+    notifBell.classList.remove('ringing');
+    // Force a reflow so the animation can restart on consecutive events.
+    void notifBell.offsetWidth;
+    notifBell.classList.add('ringing');
+    window.setTimeout(() => notifBell.classList.remove('ringing'), 900);
+  }
+
+  function setNotifOpen(open) {
+    if (!notifPopover || !notifBell) return;
+    notifPopover.hidden = !open;
+    notifPopover.classList.toggle('open', open);
+    notifBell.setAttribute('aria-expanded', String(open));
+
+    if (open) {
+      state.unreadCount = 0;
+      renderNotifications();
+      const first = notifList ? notifList.querySelector('.notif-item') : null;
+      if (first) first.focus({ preventScroll: true });
+    }
+  }
+
+  function clearNotifications() {
+    state.notifications = [];
+    state.unreadCount = 0;
+    renderNotifications();
+    updateFeedProgress();
+  }
+
+  // ─── Chip glide (Rare UI "Gooey Nav" pattern, reduced) ──────
+  function syncChipGlide() {
+    if (!chipGlide || !categoryChips) return;
+    const active = categoryChips.querySelector('.chip.active');
+    if (!active) {
+      chipGlide.classList.remove('ready');
+      return;
+    }
+    chipGlide.style.width = `${active.offsetWidth}px`;
+    chipGlide.style.height = `${active.offsetHeight}px`;
+    chipGlide.style.transform =
+      `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+    chipGlide.classList.add('ready');
+  }
+
+  // ─── Feed scroll progress (Rare UI "Scroll Progress" pattern) ─
+  function updateFeedProgress() {
+    if (!feedProgressBar || !feedList) return;
+    const max = feedList.scrollHeight - feedList.clientHeight;
+    const ratio = max > 0
+      ? Math.min(1, Math.max(0, feedList.scrollTop / max))
+      : 0;
+    feedProgressBar.style.transform = `scaleX(${ratio})`;
+    const track = feedProgressBar.parentElement;
+    if (track) track.classList.toggle('is-scrolled', ratio > 0.002);
+  }
+
   // ─── Panel helpers ────────────────────────────────────────
   function restorePanelState() {
     const stored = localStorage.getItem('lp_panel');
@@ -781,6 +1123,12 @@
     panelOpenButton.hidden = open;
     if (persist) localStorage.setItem('lp_panel', open ? 'open' : 'closed');
     if (!drawer.classList.contains('open')) updateMapPadding();
+    if (open) {
+      window.requestAnimationFrame(() => {
+        syncChipGlide();
+        updateFeedProgress();
+      });
+    }
   }
 
   // ─── Utilities ────────────────────────────────────────────
@@ -857,20 +1205,62 @@
     overlay.addEventListener('click', closeDrawer);
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeDrawer();
-        hideTooltip();
+      if (event.key !== 'Escape') return;
+      if (notifPopover && !notifPopover.hidden) {
+        setNotifOpen(false);
+        notifBell.focus({ preventScroll: true });
       }
+      closeDrawer();
+      hideTooltip();
     });
 
-    $('#category-chips').addEventListener('click', (event) => {
+    categoryChips.addEventListener('click', (event) => {
       const chip = event.target.closest('.chip');
       if (!chip) return;
       state.filter = chip.dataset.cat || 'all';
       document.querySelectorAll('#category-chips .chip').forEach((button) => {
         button.classList.toggle('active', button === chip);
       });
+      syncChipGlide();
       renderFeed();
+    });
+
+    notifBell.addEventListener('click', () => {
+      setNotifOpen(notifPopover.hidden);
+    });
+
+    $('#notif-clear').addEventListener('click', (event) => {
+      event.stopPropagation();
+      clearNotifications();
+    });
+
+    notifList.addEventListener('click', (event) => {
+      const item = event.target.closest('.notif-item');
+      if (!item) return;
+      setNotifOpen(false);
+      openDrawer(Number(item.dataset.eventId));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!notifPopover || notifPopover.hidden) return;
+      if (event.target.closest('#notif-popover') || event.target.closest('#notif-bell')) {
+        return;
+      }
+      setNotifOpen(false);
+    });
+
+    feedList.addEventListener('scroll', updateFeedProgress, { passive: true });
+
+    stepPlay.addEventListener('click', toggleStepPlayer);
+
+    $('#drawer-timeline').addEventListener('click', (event) => {
+      const item = event.target.closest('.timeline-item[data-step-index]');
+      if (!item || state.stepCount < 2) return;
+      const index = Number(item.dataset.stepIndex);
+      if (!Number.isFinite(index)) return;
+      pauseStepPlayer();
+      state.stepIndex = index + 1;
+      applyStepState();
     });
 
     $('#window-select').addEventListener('change', (event) => {
@@ -902,6 +1292,8 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         if (!drawer.classList.contains('open')) updateMapPadding();
+        syncChipGlide();
+        updateFeedProgress();
       }, 200);
     });
 

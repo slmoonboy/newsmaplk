@@ -1,0 +1,10 @@
+{
+  "mcp": {
+    "servers": {
+      "skill-issue": {
+        "type": "remote",
+        "url": "https://skill-issue.in/api/mcp"
+      }
+    }
+  }
+}

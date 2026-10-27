@@ -41,6 +41,9 @@ data/
 *.db-shm
 lankapulse.db
 
+# ─── Agent skills / local tool cache ────────────────────────
+.agents/
+
 # ─── Runtime caches ─────────────────────────────────────────
 .cache/
 backend/.cache/

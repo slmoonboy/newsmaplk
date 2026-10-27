@@ -37,12 +37,27 @@ Last reviewed: October 2026.
 | [python-dotenv](https://github.com/theskumar/python-dotenv) | `.env` loading | BSD-3-Clause | |
 | [MapLibre GL JS](https://maplibre.org/) | Vector map renderer | BSD-3-Clause | Loaded from a public CDN |
 | [OpenFreeMap](https://openfreemap.org/) | Free vector tiles + styles | Free service, open data | No key, no signup |
+| [Rare UI](https://rareui.com) | Interaction-pattern reference (counters, bell, chip glide, scroll progress, step player) | MIT + Commons Clause 1.0 + Attribution | Component **source is not vendored**; only patterns are re-implemented in vanilla JS/CSS. Metadata indexed locally. See [`RARE_UI.md`](RARE_UI.md) |
+| [Skill Issue](https://skill-issue.in/) MCP | Read-only agent-skill catalogue | Public MCP endpoint | No key or account; configured in `opencode.json` |
+| [skills CLI](https://github.com/vercel-labs/skills) | Installs local agent skills | MIT | Build-time tooling only; `.agents/` is git-ignored |
 | [pytest](https://pytest.org/) / [ruff](https://docs.astral.sh/ruff/) | Tests / lint (dev only) | MIT | |
 
 Frontend fonts (Inter, JetBrains Mono, Noto Sans Sinhala/Tamil) are **SIL Open Font
 License 1.1** and served by Google Fonts.
 
 The UI has **no build step** — plain HTML, CSS and ES2020 JavaScript.
+
+### Agent and design tooling (optional, not shipped)
+
+* **Skill Issue MCP** (`skill-issue.in/api/mcp`) is a remote, read-only skill catalogue
+  configured project-locally in `opencode.json`. It has no bearing on the running app.
+* **Agent skills** are installed into `.agents/skills/` with the MIT-licensed `skills` CLI
+  and recorded in `skills-lock.json`. They are local build-time guidance and git-ignored.
+* **Rare UI registry index** — `scripts/rare_registry.py` downloads the public registry and
+  stores metadata (no component source) in `data/rare-ui.db` using only the Python standard
+  library. See [`RARE_UI.md`](RARE_UI.md) for the licence and attribution rules.
+* The five Rare UI-inspired interactions are original vanilla implementations and are not
+  redistributed Rare UI source. The visible credit is required by the upstream licence.
 
 ### Optional language models (open weights)
 
@@ -150,7 +165,10 @@ If you deploy LankaPulse publicly you must keep:
   **© OpenStreetMap contributors**, **OpenFreeMap**, **MapLibre**, and
   **geoBoundaries (ODbL)**;
 * source outlet names and article links in the event drawer;
-* Wikipedia links and CC BY-SA notice where Wikipedia context is shown.
+* Wikipedia links and CC BY-SA notice where Wikipedia context is shown;
+* the **“UI patterns by Rare UI”** credit in the feed panel footer and the
+  **“UI patterns: Rare UI”** link in the map attribution (required by Rare UI's
+  MIT + Commons Clause + Attribution licence).
 
 ODbL requires that derivative databases remain ODbL. The committed district GeoJSON keeps
 its `attribution` and `source` fields for this reason.
