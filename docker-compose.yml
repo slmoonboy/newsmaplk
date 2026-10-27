@@ -1,0 +1,37 @@
+services:
+  lankapulse:
+    build: .
+    image: lankapulse:local
+    container_name: lankapulse
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      # Pipeline ON = live public RSS ingestion every 3 minutes.
+      ENABLE_PIPELINE: "${ENABLE_PIPELINE:-true}"
+      POLL_INTERVAL_SECONDS: "${POLL_INTERVAL_SECONDS:-180}"
+      # auto = probe the local LLM endpoint, fall back to the rule extractor.
+      LLM_PROVIDER: "${LLM_PROVIDER:-auto}"
+      LLM_BASE_URL: "${LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
+      LLM_MODEL: "${LLM_MODEL:-qwen2.5:7b-instruct}"
+      ENABLE_GROUNDING: "${ENABLE_GROUNDING:-true}"
+      ENABLE_GDELT: "${ENABLE_GDELT:-false}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    volumes:
+      - lankapulse-data:/app/data
+    extra_hosts:
+      # Lets the container reach an Ollama server on the host (Linux).
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  lankapulse-data:

@@ -8,8 +8,10 @@
 
   // ─── Constants ────────────────────────────────────────────
   const SL_CENTER = [80.7718, 7.8731];
-  const SL_ZOOM = 6.7;
-  const SL_BOUNDS = [[76.5, 3.5], [85.0, 12.0]];
+  const SL_ZOOM = 7.0;
+  // Generous bounds: keep the user near Sri Lanka without forcing a zoom level
+  // (a tight maxBounds makes MapLibre zoom in differently per window size).
+  const SL_BOUNDS = [[73.5, 2.5], [88.0, 13.5]];
   const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
   const RASTER_STYLE = {
     version: 8,
@@ -86,6 +88,10 @@
     setInterval(refreshRelativeTimes, 30000);
     setInterval(refreshStats, 60000);
     setInterval(wsPing, 25000);
+    // If the WebSocket is blocked (proxy, CDN), fall back to polling.
+    setInterval(() => {
+      if (!state.ws || state.ws.readyState !== WebSocket.OPEN) fetchEvents();
+    }, 60000);
     updateClock();
   });
 
@@ -140,7 +146,7 @@
 
   // Keep Sri Lanka centred in the part of the map not covered by the feed.
   function updateMapPadding(extraBottom = 0) {
-    if (!state.map || !state.map.loaded()) return;
+    if (!state.map) return;
     const panelVisible = !panel.hidden && window.innerWidth > 900;
     state.map.setPadding({
       top: 52,

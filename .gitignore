@@ -1,80 +1,76 @@
-# Byte-compiled / optimized / DLL files
+# ─── Python bytecode ────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
+
+# ─── Build / packaging ──────────────────────────────────────
 build/
-develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# Virtual environments
+# ─── Virtual environments ───────────────────────────────────
 venv/
 .venv/
 env/
+ENV/
+
+# ─── Secrets / local configuration ──────────────────────────
+.env
 .env.local
 .env.*.local
-
-# Sensitive environment configuration
-.env
 !.env.example
 
-# SQLite Databases & Storage
+# ─── SQLite database & runtime data ─────────────────────────
+data/
 *.sqlite
 *.sqlite3
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
-data/
 lankapulse.db
 
-# Logs
+# ─── Runtime caches ─────────────────────────────────────────
+.cache/
+backend/.cache/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# ─── Logs ───────────────────────────────────────────────────
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Playwright
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-
-# Unit test / coverage
+# ─── Test / coverage output ─────────────────────────────────
 htmlcov/
-.tox/
-.nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
-.hypothesis/
-.pytest_cache/
+nosetests.xml
 
-# IDE & Editor files
+# ─── Screenshots / local artefacts ──────────────────────────
+screenshots/
+
+# ─── IDE & editor files ─────────────────────────────────────
 .vscode/
 .idea/
 *.sublime-project
@@ -83,7 +79,7 @@ coverage.xml
 *.swo
 *~
 
-# Operating System files
+# ─── Operating system files ─────────────────────────────────
 .DS_Store
 .DS_Store?
 ._*
