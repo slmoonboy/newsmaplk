@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LankaPulse — Real-Time Breaking News Map of Sri Lanka</title>
+  <meta name="description" content="Live, location-aware breaking news map of Sri Lanka. AI-assisted, open-source, and built from public RSS feeds.">
+  <meta name="theme-color" content="#09090B">
+
+  <!-- MapLibre GL JS (BSD-3-Clause) -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+  <!-- ═══ Header ═══ -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">LP</div>
+        <div class="logo-text">Lanka<span>Pulse</span></div>
+      </div>
+      <div class="header-separator"></div>
+      <div class="header-subtitle">Open-Source News Intelligence</div>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator" id="conn-indicator" title="Live WebSocket connection">
+        <div class="live-dot" id="live-dot"></div>
+        <span id="conn-state">CONNECTING</span>
+      </div>
+      <button
+        class="bell-button"
+        id="notif-bell"
+        type="button"
+        aria-label="New events"
+        aria-expanded="false"
+        aria-haspopup="true"
+        aria-controls="notif-popover"
+        title="New events"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3a6 6 0 0 0-6 6v3.2l-1.4 2.4A1 1 0 0 0 5.5 16h13a1 1 0 0 0 .9-1.4L18 12.2V9a6 6 0 0 0-6-6Z"></path>
+          <path d="M9.5 19a2.5 2.5 0 0 0 5 0"></path>
+        </svg>
+        <span class="bell-badge" id="notif-badge" hidden>0</span>
+      </button>
+      <div class="stat-chip">
+        <span>Events 24h</span>
+        <span class="count counter" id="stat-events-24h" role="status" data-value="0">0</span>
+      </div>
+      <div class="stat-chip">
+        <span>Districts</span>
+        <span class="count counter" id="stat-districts" role="status" data-value="0">0</span>
+      </div>
+      <div class="stat-chip">
+        <span class="count" id="stat-time">--:--:--</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ New-event notifications ═══ -->
+  <div class="notif-popover" id="notif-popover" hidden role="region" aria-label="New events">
+    <div class="notif-head">
+      <span class="notif-title">New events</span>
+      <button class="notif-clear" id="notif-clear" type="button">Clear</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+
+  <!-- ═══ Map ═══ -->
+  <div id="map"></div>
+
+  <!-- ═══ Live Feed Panel ═══ -->
+  <aside class="feed-panel" id="feed-panel" aria-label="Live event feed">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Live Feed</div>
+        <div class="panel-sub" id="feed-sub">Loading events…</div>
+      </div>
+      <button class="panel-collapse" id="panel-collapse" aria-label="Collapse feed panel" title="Collapse feed">‹</button>
+    </div>
+
+    <div class="panel-controls">
+      <div class="chips" id="category-chips" role="group" aria-label="Filter events by category">
+        <span class="chip-glide" id="chip-glide" aria-hidden="true"></span>
+        <button class="chip active" data-cat="all">All</button>
+        <button class="chip" data-cat="ACCIDENT">Accident</button>
+        <button class="chip" data-cat="WEATHER">Weather</button>
+        <button class="chip" data-cat="POLITICS">Politics</button>
+        <button class="chip" data-cat="CRIME">Crime</button>
+        <button class="chip" data-cat="ECONOMY">Economy</button>
+        <button class="chip" data-cat="INFRASTRUCTURE">Infra</button>
+        <button class="chip" data-cat="OTHER">Other</button>
+      </div>
+      <div class="panel-tools">
+        <label class="window-label" for="window-select">Window</label>
+        <select class="window-select" id="window-select">
+          <option value="1">Last hour</option>
+          <option value="6">Last 6 hours</option>
+          <option value="24" selected>Last 24 hours</option>
+          <option value="0">All time</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="feed-progress" aria-hidden="true"><span class="feed-progress-bar" id="feed-progress-bar"></span></div>
+
+    <div class="feed-list" id="feed-list"></div>
+
+    <div class="panel-foot">
+      <a href="https://rareui.com" target="_blank" rel="noopener">UI patterns by Rare UI</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/swamimalode07/rare-ui" target="_blank" rel="noopener">source</a>
+    </div>
+  </aside>
+
+  <button class="panel-open" id="panel-open" hidden>
+    <span class="live-dot"></span> Live feed
+  </button>
+
+  <!-- ═══ Hover Tooltip ═══ -->
+  <div class="map-tooltip" id="map-tooltip" role="tooltip">
+    <div class="tooltip-location" id="tooltip-location"></div>
+    <div class="tooltip-title" id="tooltip-title"></div>
+    <div class="tooltip-meta" id="tooltip-meta"></div>
+  </div>
+
+  <!-- ═══ Empty State ═══ -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-state-icon">◎</div>
+    <span>Monitoring Sri Lankan news channels… Events will appear as map pins.</span>
+  </div>
+
+  <!-- ═══ Drawer ═══ -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <section class="drawer" id="drawer" aria-label="Event details" aria-hidden="true">
+    <div class="drawer-handle"><div class="drawer-handle-bar"></div></div>
+
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <div class="drawer-location">
+          <span class="drawer-location-badge" id="drawer-location"></span>
+          <span class="drawer-coords" id="drawer-coords"></span>
+          <span class="precision-badge" id="drawer-precision" hidden></span>
+        </div>
+        <h1 class="drawer-title" id="drawer-title"></h1>
+        <div class="drawer-title-si" id="drawer-title-si" hidden></div>
+        <div class="drawer-title-ta" id="drawer-title-ta" hidden></div>
+      </div>
+      <button class="drawer-close" id="drawer-close" aria-label="Close details">✕</button>
+    </div>
+
+    <div class="drawer-content">
+      <!-- Left: synthesis -->
+      <div class="drawer-left" id="drawer-left">
+        <div class="drawer-badges">
+          <span class="category-badge" id="drawer-category" data-cat=""></span>
+          <span class="drawer-time-ago" id="drawer-time-ago"></span>
+        </div>
+
+        <div class="provenance" id="drawer-provenance"></div>
+
+        <div class="section-label">What Happened</div>
+        <div class="what-happened" id="drawer-what"></div>
+
+        <div class="section-row">
+          <div class="section-label">How It Happened</div>
+          <div class="step-controls">
+            <span class="step-count" id="step-count"></span>
+            <button class="step-play" id="step-play" type="button" aria-label="Play timeline" title="Play timeline">▶</button>
+          </div>
+        </div>
+        <div class="step-track" aria-hidden="true"><span class="step-track-fill" id="step-progress"></span></div>
+        <ul class="timeline-list" id="drawer-timeline"></ul>
+
+        <div class="section-label">Verification</div>
+        <div class="verify-meter" id="drawer-verify">
+          <div class="verify-header">
+            <span class="verify-label">Independent Sources</span>
+            <span class="verify-badge" id="verify-badge"></span>
+          </div>
+          <div class="verify-bar">
+            <div class="verify-bar-fill" id="verify-bar-fill" style="width:0%"></div>
+          </div>
+          <div class="verify-sources" id="verify-sources"></div>
+        </div>
+      </div>
+
+      <!-- Right: media feed -->
+      <div class="drawer-right">
+        <div class="feed-tabs" id="feed-tabs">
+          <button class="feed-tab active" data-filter="all">All</button>
+          <button class="feed-tab" data-filter="WEB">TV &amp; Web</button>
+          <button class="feed-tab" data-filter="X_POST">𝕏 Posts</button>
+          <button class="feed-tab" data-filter="YOUTUBE">YouTube</button>
+        </div>
+        <div class="feed-scroll" id="feed-scroll"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="./app.js"></script>
+</body>
+</html>
