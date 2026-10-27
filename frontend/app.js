@@ -897,6 +897,7 @@
     });
 
     if (stepProgress) {
+      stepProgress.parentElement.hidden = total < 2;
       stepProgress.style.transform = `scaleX(${total ? state.stepIndex / total : 0})`;
     }
     if (stepCount) {
