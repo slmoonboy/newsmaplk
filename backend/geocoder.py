@@ -21,7 +21,6 @@ import time
 import unicodedata
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Literal, Optional
 
 import httpx
@@ -35,6 +34,7 @@ CACHE_PATH = BASE_DIR / ".cache" / "nominatim.json"
 
 COUNTRY_CENTER = (7.8731, 80.7718)
 COUNTRY_BBOX = (5.80, 79.50, 9.90, 81.95)  # south, west, north, east
+_SRI_LANKA_RE = re.compile(r"\b(sri\s*lanka|lanka|ceylon)\b", re.I)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_MIN_INTERVAL = 1.1  # seconds, policy: max 1 req/sec
@@ -202,6 +202,26 @@ def town_district(town: str) -> str:
     norm = _norm(town)
     entry = town_index.get(norm) or town_index.get(_strip_suffix(norm))
     return entry.get("district", "") if entry else ""
+
+
+def sri_lanka_signal_score(text: str) -> int:
+    """2 = named Sri Lankan place, 1 = only a country reference, 0 = neither."""
+    if not text:
+        return 0
+    if find_district(text) or find_town(text):
+        return 2
+    if _SRI_LANKA_RE.search(text):
+        return 1
+    return 0
+
+
+def text_has_sri_lanka_signal(text: str) -> bool:
+    """Cheap pre-screen: does this item look like it is about Sri Lanka?
+
+    Used to prioritise the queue and to avoid spending network calls on world
+    news that a Sri Lankan publisher happened to syndicate.
+    """
+    return sri_lanka_signal_score(text) > 0
 
 
 def find_town(text: str, district: str = "") -> Optional[dict]:

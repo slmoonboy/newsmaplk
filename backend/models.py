@@ -4,7 +4,6 @@ LankaPulse — database models, API schemas and LLM output schemas.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -21,12 +20,11 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship
 
-from config import BASE_DIR, get_settings
+from config import get_settings
 
 
 def utcnow() -> datetime:

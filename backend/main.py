@@ -11,7 +11,6 @@ import logging
 import time
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
-from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect

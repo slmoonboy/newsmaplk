@@ -15,12 +15,11 @@ degrade to an empty bundle.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import re
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Iterable, Optional
 
 import feedparser
@@ -52,7 +51,6 @@ STOPWORDS = {
 }
 
 _TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
-_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 
 
 @dataclass

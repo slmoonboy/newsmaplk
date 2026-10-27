@@ -31,7 +31,6 @@ from sqlalchemy.orm import selectinload
 
 from config import Settings
 from geocoder import (
-    district_centroid,
     find_district,
     find_town,
     geocode,
@@ -389,6 +388,10 @@ _NON_PHYSICAL_HINTS = (
     "opinion", "editorial", "analysis:", "explainer", "review", "how to",
     "what is", "scorecard", "match preview", "live stream", "watch live",
     "obituary", "cartoon", "astrology", "horoscope",
+    # Market/finance copy is location-tagged with Colombo but is not an incident.
+    "stocks", "share price", "shares ", "aspi", "debenture", "fitch",
+    "credit rating", "earnings", "dividend", "market close", "turnover",
+    "t-bill", "treasury bill", "bond yield",
 )
 
 _TITLE_STOPWORDS = {
@@ -474,7 +477,6 @@ def _heuristic_extract(
     summary = _clean_summary(raw_description, fallback=_clean_title(raw_title))
     steps = [part.strip() for part in _SENTENCE_SPLIT.split(summary) if part.strip()][:4]
 
-    source_count = grounded.news_source_count
     confidence = 0.40
     if category != "OTHER":
         confidence += 0.10

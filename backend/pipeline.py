@@ -16,10 +16,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Awaitable, Callable, Optional
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, or_, select, update
 
 from ai_processor import event_to_dict, extract_event_with_llm, process_and_store_event
 from config import Settings
+from geocoder import sri_lanka_signal_score, text_has_sri_lanka_signal
 from grounder import ground_event
 from ingestor import RawNewsItem, extract_domain, run_ingestion_cycle
 from models import RawItem, utcnow
@@ -89,13 +90,26 @@ async def _insert_new_items(session, items: list[RawNewsItem]) -> int:
 
 
 async def _pending_ids(session, limit: int) -> list[int]:
+    """Pick the freshest items that look Sri Lanka-related.
+
+    The queue is intentionally larger than the per-cycle budget; relevance and
+    recency decide which items get the expensive corroboration + extraction.
+    """
     result = await session.execute(
-        select(RawItem.id)
+        select(RawItem)
         .where(RawItem.status == "pending")
-        .order_by(RawItem.discovered_at.asc())
-        .limit(limit)
+        .order_by(RawItem.discovered_at.desc())
+        .limit(300)
     )
-    return list(result.scalars().all())
+    items = list(result.scalars().all())
+    items.sort(
+        key=lambda item: (
+            sri_lanka_signal_score(f"{item.title} {item.summary or ''}"),
+            item.published_at or item.discovered_at,
+        ),
+        reverse=True,
+    )
+    return [item.id for item in items[:limit]]
 
 
 async def _process_item(
@@ -111,6 +125,18 @@ async def _process_item(
             return
 
         try:
+            if not text_has_sri_lanka_signal(f"{item.title} {item.summary or ''}"):
+                reason = "no Sri Lankan location or reference"
+                await session.execute(
+                    update(RawItem)
+                    .where(RawItem.id == item_id)
+                    .values(status="skipped", skip_reason=reason, processed_at=utcnow())
+                )
+                await session.commit()
+                summary["skipped"] = summary.get("skipped", 0) + 1
+                logger.info("Skipped raw item #%s: %s", item_id, reason)
+                return
+
             bundle = await ground_event(
                 title=item.title,
                 description=item.summary or "",
@@ -194,9 +220,10 @@ async def _prune(session_factory, settings: Settings) -> int:
     async with session_factory() as session:
         result = await session.execute(
             delete(RawItem).where(
-                RawItem.status != "pending",
-                RawItem.processed_at.is_not(None),
-                RawItem.processed_at < cutoff,
+                or_(
+                    and_(RawItem.processed_at.is_not(None), RawItem.processed_at < cutoff),
+                    and_(RawItem.status == "pending", RawItem.discovered_at < cutoff),
+                )
             )
         )
         await session.commit()
